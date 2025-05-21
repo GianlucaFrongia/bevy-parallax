@@ -69,11 +69,8 @@ pub fn new_create_parallax_event(camera: Entity) -> CreateParallaxEvent {
 
 // Put a ParallaxCameraComponent on the camera used for parallax
 pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
-    let camera = commands
-        .spawn(Camera2d::default())
-        .insert(ParallaxCameraComponent::default())
-        .id();
-    create_parallax.send(new_create_parallax_event(camera));
+    let camera = commands.spawn(Camera2d::default()).insert(ParallaxCameraComponent::default()).id();
+    create_parallax.write(new_create_parallax_event(camera));
 }
 
 pub fn reload_system(
@@ -81,9 +78,9 @@ pub fn reload_system(
     camera_query: Query<Entity, With<Camera>>,
     mut create_parallax: EventWriter<CreateParallaxEvent>,
 ) {
-    let camera = camera_query.get_single().unwrap();
+    let camera = camera_query.single().unwrap();
     if keyboard_input.just_released(KeyCode::KeyR) {
-        create_parallax.send(new_create_parallax_event(camera));
+        create_parallax.write(new_create_parallax_event(camera));
     }
 }
 
@@ -94,7 +91,7 @@ pub fn despawn_all(
 ) {
     if keyboard_input.just_released(KeyCode::KeyQ) {
         for entity in all_query.iter() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }
@@ -105,15 +102,15 @@ pub fn move_camera_system(
     mut move_event_writer: EventWriter<ParallaxMoveEvent>,
     camera_query: Query<Entity, With<Camera>>,
 ) {
-    let camera = camera_query.get_single().unwrap();
+    let camera = camera_query.single().unwrap();
     if keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(3.0, 0.0),
             rotation: 0.,
             camera: camera,
         });
     } else if keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(-3.0, 0.0),
             rotation: 0.,
             camera: camera,

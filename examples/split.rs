@@ -52,7 +52,8 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
         .insert(InputMap::awsd())
         .id();
     let right_camera = commands
-        .spawn((Camera2d::default() ,
+        .spawn((
+            Camera2d::default(),
             Camera {
                 order: 1,
                 viewport: Some(Viewport {
@@ -68,7 +69,7 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
         .insert(RenderLayers::from_layers(&[0, 2]))
         .insert(InputMap::arrows())
         .id();
-    create_parallax.send(CreateParallaxEvent {
+    create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
                 speed: LayerSpeed::Horizontal(0.9),
@@ -106,7 +107,7 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
         ],
         camera: left_camera,
     });
-    create_parallax.send(CreateParallaxEvent {
+    create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
                 speed: LayerSpeed::Bidirectional(0.9, 0.9),
@@ -169,26 +170,26 @@ pub fn move_camera_system(
 ) {
     for (camera, input_map) in camera_query.iter() {
         if keyboard_input.pressed(input_map.right) {
-            move_event_writer.send(ParallaxMoveEvent {
+            move_event_writer.write(ParallaxMoveEvent {
                 translation: Vec2::new(9.0, 0.0),
                 rotation: 0.,
                 camera,
             });
         } else if keyboard_input.pressed(input_map.left) {
-            move_event_writer.send(ParallaxMoveEvent {
+            move_event_writer.write(ParallaxMoveEvent {
                 translation: Vec2::new(-9.0, 0.0),
                 rotation: 0.,
                 camera,
             });
         }
         if keyboard_input.pressed(input_map.up) {
-            move_event_writer.send(ParallaxMoveEvent {
+            move_event_writer.write(ParallaxMoveEvent {
                 translation: Vec2::new(0.0, 9.0),
                 rotation: 0.,
                 camera,
             });
         } else if keyboard_input.pressed(input_map.down) {
-            move_event_writer.send(ParallaxMoveEvent {
+            move_event_writer.write(ParallaxMoveEvent {
                 translation: Vec2::new(0.0, -9.0),
                 rotation: 0.,
                 camera,

@@ -29,12 +29,7 @@ impl Default for PID {
 
 impl PID {
     pub fn new(kp: f32, ki: f32, kd: f32) -> Self {
-        Self {
-            kp,
-            ki,
-            kd,
-            ..default()
-        }
+        Self { kp, ki, kd, ..default() }
     }
 
     pub fn with_integral_limit(mut self, limit: Limit) -> Self {
@@ -343,7 +338,7 @@ pub fn camera_follow_system(
                 target.rotation.to_euler(EulerRot::XYZ).2,
                 camera_transform.rotation.to_euler(EulerRot::XYZ).2,
             );
-            event_writer.send(ParallaxMoveEvent {
+            event_writer.write(ParallaxMoveEvent {
                 translation: camera_movement,
                 camera,
                 rotation: camera_rotation,

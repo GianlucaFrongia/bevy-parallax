@@ -81,7 +81,7 @@ pub fn initialize_camera_system(
         ],
         camera: camera,
     };
-    create_parallax.send(event);
+    create_parallax.write(event);
 }
 
 pub fn move_camera_system(
@@ -89,15 +89,15 @@ pub fn move_camera_system(
     mut move_event_writer: EventWriter<ParallaxMoveEvent>,
     camera_query: Query<Entity, With<Camera>>,
 ) {
-    let camera = camera_query.get_single().unwrap();
+    let camera = camera_query.single().unwrap();
     if keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(3.0, 0.0),
             rotation: 0.,
             camera: camera,
         });
     } else if keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(-3.0, 0.0),
             rotation: 0.,
             camera: camera,

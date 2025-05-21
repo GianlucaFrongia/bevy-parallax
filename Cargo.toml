@@ -12,20 +12,28 @@ keywords = ["bevy", "gamedev", "parallax", "scrolling", "background"]
 exclude = ["assets/*"]
 
 [dependencies]
-serde = { version = "1.0.180", optional = false }
-bevy-inspector-egui = { version = "0.28", optional = true }
+serde = { version = "1.0.219", optional = false }
+bevy-inspector-egui = { version = "0.31", optional = true }
 
 [dependencies.bevy]
-version = "0.15.0"
+version = "0.16.0"
 default-features = false
-features = ["bevy_render", "bevy_core_pipeline", "bevy_sprite", "bevy_asset", "bevy_window"]
+features = [
+    "std",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_asset",
+    "bevy_window",
+    "async_executor",
+]
 
 [dev-dependencies]
-bevy-inspector-egui = "0.28"
-ron = "0.8.0"
+bevy-inspector-egui = "0.31"
+ron = "0.10.1"
 
 [dev-dependencies.bevy]
-version = "0.15"
+version = "0.16"
 default-features = false
 features = ["x11", "png"]
 

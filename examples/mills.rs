@@ -37,11 +37,8 @@ fn main() {
 
 // Put a ParallaxCameraComponent on the camera used for parallax
 pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
-    let camera = commands
-        .spawn(Camera2d::default())
-        .insert(ParallaxCameraComponent::default())
-        .id();
-    create_parallax.send(CreateParallaxEvent {
+    let camera = commands.spawn(Camera2d::default()).insert(ParallaxCameraComponent::default()).id();
+    create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
                 speed: LayerSpeed::Bidirectional(0.99, 0.99),
@@ -126,7 +123,7 @@ pub fn move_camera_system(
     mut move_event_writer: EventWriter<ParallaxMoveEvent>,
     mut camera_query: Query<(Entity, &mut Transform), With<Camera>>,
 ) {
-    let (camera, mut camera_transform) = camera_query.get_single_mut().unwrap();
+    let (camera, mut camera_transform) = camera_query.single_mut().unwrap();
     let speed = 20.;
     let mut direction = Vec2::ZERO;
     if keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight) {
@@ -147,7 +144,7 @@ pub fn move_camera_system(
     if keyboard_input.pressed(KeyCode::KeyQ) {
         camera_transform.rotate_z(-0.1);
     }
-    move_event_writer.send(ParallaxMoveEvent {
+    move_event_writer.write(ParallaxMoveEvent {
         translation: direction.normalize_or_zero() * speed,
         camera: camera,
         rotation: 0.,

@@ -106,7 +106,7 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
             ..default()
         })
         .id();
-    create_parallax.send(CreateParallaxEvent {
+    create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
                 speed: LayerSpeed::Bidirectional(0.9, 0.9),

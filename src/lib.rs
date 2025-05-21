@@ -1,4 +1,4 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 pub mod camera;
@@ -63,7 +63,7 @@ fn create_parallax_system(
                 if layer.camera != parallax_entity {
                     continue;
                 }
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
             if let Some(viewport) = &camera.viewport {
                 window_size = viewport.physical_size.as_vec2();
@@ -116,7 +116,7 @@ fn update_layer_textures_system(
         if !event.has_translation() {
             continue;
         }
-        let primary_window = window_query.get_single().unwrap();
+        let primary_window = window_query.single().unwrap();
         let window_size = Vec2::new(primary_window.width(), primary_window.height());
         if let Ok((camera_entity, camera_transform, camera)) = camera_query.get(event.camera) {
             let view_size = match &camera.viewport {
@@ -127,7 +127,7 @@ fn update_layer_textures_system(
                 if layer.camera != camera_entity {
                     continue;
                 }
-                for &child in children.iter() {
+                for child in children.iter() {
                     let (texture_gtransform, mut texture_transform, layer_texture, computed_visibility) =
                         texture_query.get_mut(child).unwrap();
                     // Do not move visible textures

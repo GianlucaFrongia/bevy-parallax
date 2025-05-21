@@ -30,11 +30,8 @@ fn main() {
 
 // Put a ParallaxCameraComponent on the camera used for parallax
 pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
-    let camera = commands
-        .spawn(Camera2d::default())
-        .insert(ParallaxCameraComponent::default())
-        .id();
-    create_parallax.send(CreateParallaxEvent {
+    let camera = commands.spawn(Camera2d::default()).insert(ParallaxCameraComponent::default()).id();
+    create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
                 speed: LayerSpeed::Bidirectional(0.9, 0.9),
@@ -67,28 +64,28 @@ pub fn move_camera_system(
     camera_query: Query<Entity, With<Camera>>,
     mut move_event_writer: EventWriter<ParallaxMoveEvent>,
 ) {
-    let camera = camera_query.get_single().unwrap();
+    let camera = camera_query.single().unwrap();
     if keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(3.0, 0.0),
             rotation: 0.,
             camera: camera,
         });
     } else if keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(-3.0, 0.0),
             rotation: 0.,
             camera: camera,
         });
     }
     if keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(0.0, 3.0),
             rotation: 0.,
             camera: camera,
         });
     } else if keyboard_input.pressed(KeyCode::KeyS) || keyboard_input.pressed(KeyCode::ArrowDown) {
-        move_event_writer.send(ParallaxMoveEvent {
+        move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(0.0, -3.0),
             rotation: 0.,
             camera: camera,
