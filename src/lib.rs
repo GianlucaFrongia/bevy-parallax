@@ -134,30 +134,53 @@ fn update_layer_textures_system(
                     if computed_visibility.get() {
                         continue;
                     }
-                    let texture_gtransform = texture_gtransform.compute_transform();
-                    let texture_translation = camera_transform.translation - texture_gtransform.translation;
+                    let texture_gtransform_computed = texture_gtransform.compute_transform();
+
+                    // Correct for stale GlobalTransform
+                    let stale_texture_translation =
+                        camera_transform.translation - texture_gtransform_computed.translation;
+                    let correction = Vec3::new(
+                        event.translation.x * layer.speed.x,
+                        event.translation.y * layer.speed.y,
+                        0.0,
+                    );
+                    let texture_translation = stale_texture_translation - correction;
+
                     if layer.repeat.has_horizontal() {
                         let x_delta = layer_texture.width * layer.texture_count.x;
-                        let half_width = layer_texture.width * texture_gtransform.scale.x / 2.0;
-                        // Move not visible right texture to left side of layer when camera is moving to left
-                        if event.has_left_translation() && texture_translation.x + half_width < -view_size.x {
-                            texture_transform.translation.x -= x_delta;
+                        let half_width = layer_texture.width * texture_gtransform_computed.scale.x / 2.0;
+                        // Move not visible right texture to left side of layer
+                        if texture_translation.x + half_width < -view_size.x {
+                            let distance_offscreen =
+                                -view_size.x - (texture_translation.x + half_width);
+                            let num_of_jumps = (distance_offscreen / x_delta).ceil().max(1.0);
+                            texture_transform.translation.x -= x_delta * num_of_jumps;
                         }
-                        // Move not visible left texture to right side of layer when camera is moving to right
-                        if event.has_right_translation() && texture_translation.x - half_width > view_size.x {
-                            texture_transform.translation.x += x_delta;
+                        // Move not visible left texture to right side of layer
+                        else if texture_translation.x - half_width > view_size.x {
+                            let distance_offscreen =
+                                texture_translation.x - half_width - view_size.x;
+                            let num_of_jumps = (distance_offscreen / x_delta).ceil().max(1.0);
+                            texture_transform.translation.x += x_delta * num_of_jumps;
                         }
                     }
                     if layer.repeat.has_vertical() {
                         let y_delta = layer_texture.height * layer.texture_count.y;
-                        let half_height = layer_texture.height * texture_gtransform.scale.y / 2.0;
-                        // Move not visible top texture to the bottom of the layer when the camera is moving to the bottom
-                        if event.has_down_translation() && texture_translation.y + half_height < -view_size.y {
-                            texture_transform.translation.y -= y_delta;
+                        let half_height =
+                            layer_texture.height * texture_gtransform_computed.scale.y / 2.0;
+                        // Move not visible top texture to the bottom of the layer
+                        if texture_translation.y + half_height < -view_size.y {
+                            let distance_offscreen =
+                                -view_size.y - (texture_translation.y + half_height);
+                            let num_of_jumps = (distance_offscreen / y_delta).ceil().max(1.0);
+                            texture_transform.translation.y -= y_delta * num_of_jumps;
                         }
-                        // Move not visible bottom texture to the top of the layer when the camera is moving to the top
-                        if event.has_up_translation() && texture_translation.y - half_height > view_size.y {
-                            texture_transform.translation.y += y_delta;
+                        // Move not visible bottom texture to the top of the layer
+                        else if texture_translation.y - half_height > view_size.y {
+                            let distance_offscreen =
+                                texture_translation.y - half_height - view_size.y;
+                            let num_of_jumps = (distance_offscreen / y_delta).ceil().max(1.0);
+                            texture_transform.translation.y += y_delta * num_of_jumps;
                         }
                     }
                 }
