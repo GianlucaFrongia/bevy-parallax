@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResolution};
 #[cfg(feature = "bevy-inspector-egui")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_parallax::{
@@ -10,7 +10,7 @@ fn main() {
     // Define window
     let primary_window = Window {
         title: "Mills".to_string(),
-        resolution: (1280.0, 720.0).into(),
+        resolution: WindowResolution::new(1280, 720),
         resizable: false,
         ..Default::default()
     };
@@ -36,8 +36,8 @@ fn main() {
 }
 
 // Put a ParallaxCameraComponent on the camera used for parallax
-pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
-    let camera = commands.spawn(Camera2d::default()).insert(ParallaxCameraComponent::default()).id();
+pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: MessageWriter<CreateParallaxEvent>) {
+    let camera = commands.spawn(Camera2d).insert(ParallaxCameraComponent::default()).id();
     create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
@@ -113,14 +113,14 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
                 ..default()
             },
         ],
-        camera: camera,
+        camera,
     });
 }
 
 // Send a ParallaxMoveEvent with the desired camera movement speed
 pub fn move_camera_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut move_event_writer: EventWriter<ParallaxMoveEvent>,
+    mut move_event_writer: MessageWriter<ParallaxMoveEvent>,
     mut camera_query: Query<(Entity, &mut Transform), With<Camera>>,
 ) {
     let (camera, mut camera_transform) = camera_query.single_mut().unwrap();
@@ -146,7 +146,7 @@ pub fn move_camera_system(
     }
     move_event_writer.write(ParallaxMoveEvent {
         translation: direction.normalize_or_zero() * speed,
-        camera: camera,
+        camera,
         rotation: 0.,
     });
 }

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResolution};
 use bevy_parallax::{
     CreateParallaxEvent, LayerData, LayerSpeed, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxPlugin, ParallaxSystems,
 };
@@ -7,7 +7,7 @@ fn main() {
     // Define window
     let primary_window = Window {
         title: "Sky".to_string(),
-        resolution: (1280.0, 720.0).into(),
+        resolution: WindowResolution::new(1280, 720),
         resizable: false,
         ..default()
     };
@@ -29,8 +29,8 @@ fn main() {
 }
 
 // Put a ParallaxCameraComponent on the camera used for parallax
-pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
-    let camera = commands.spawn(Camera2d::default()).insert(ParallaxCameraComponent::default()).id();
+pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: MessageWriter<CreateParallaxEvent>) {
+    let camera = commands.spawn(Camera2d).insert(ParallaxCameraComponent::default()).id();
     create_parallax.write(CreateParallaxEvent {
         layers_data: vec![
             LayerData {
@@ -54,7 +54,7 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
                 ..default()
             },
         ],
-        camera: camera,
+        camera,
     });
 }
 
@@ -62,33 +62,33 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
 pub fn move_camera_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     camera_query: Query<Entity, With<Camera>>,
-    mut move_event_writer: EventWriter<ParallaxMoveEvent>,
+    mut move_event_writer: MessageWriter<ParallaxMoveEvent>,
 ) {
     let camera = camera_query.single().unwrap();
     if keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight) {
         move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(3.0, 0.0),
             rotation: 0.,
-            camera: camera,
+            camera,
         });
     } else if keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft) {
         move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(-3.0, 0.0),
             rotation: 0.,
-            camera: camera,
+            camera,
         });
     }
     if keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp) {
         move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(0.0, 3.0),
             rotation: 0.,
-            camera: camera,
+            camera,
         });
     } else if keyboard_input.pressed(KeyCode::KeyS) || keyboard_input.pressed(KeyCode::ArrowDown) {
         move_event_writer.write(ParallaxMoveEvent {
             translation: Vec2::new(0.0, -3.0),
             rotation: 0.,
-            camera: camera,
+            camera,
         });
     }
 }

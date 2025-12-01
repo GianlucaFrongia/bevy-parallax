@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{ecs::entity::EntityRow, prelude::*};
 #[cfg(feature = "bevy-inspector-egui")]
 use bevy_inspector_egui::prelude::*;
 
@@ -46,7 +46,7 @@ impl PID {
             integral: 0.,
             clegg_integrator: self.clegg_integrator,
             integral_limit: match &self.integral_limit {
-                Some(limit) => limit.clone(),
+                Some(limit) => *limit,
                 None => Limit::new(-PI, PI),
             },
         }
@@ -61,7 +61,7 @@ impl PID {
             integral: 0.,
             clegg_integrator: self.clegg_integrator,
             integral_limit: match &self.integral_limit {
-                Some(limit) => limit.clone(),
+                Some(limit) => *limit,
                 None => Limit::default(),
             },
         }
@@ -103,7 +103,7 @@ impl RotationStrategy {
         match self {
             Self::None => 0.,
             Self::Fixed => shortest_angle(target, current),
-            Self::P(kp) => shortest_angle(target, current) * kp.clone(),
+            Self::P(kp) => shortest_angle(target, current) * *kp,
             Self::PID {
                 kp,
                 ki,
@@ -114,9 +114,9 @@ impl RotationStrategy {
                 integral_limit,
             } => {
                 let error = shortest_angle(target, current);
-                let p_value = error * kp.clone();
+                let p_value = error * *kp;
                 let d_value = if delta_time != 0. {
-                    (error - last_error.clone()) / delta_time * kd.clone()
+                    (error - *last_error) / delta_time * *kd
                 } else {
                     0.
                 };
@@ -125,7 +125,7 @@ impl RotationStrategy {
                 } else {
                     *integral = integral_limit.fix(*integral + error * delta_time);
                 }
-                let i_value = integral.clone() * ki.clone();
+                let i_value = *integral * *ki;
                 *last_error = error;
                 p_value + i_value + d_value
             }
@@ -157,7 +157,7 @@ impl LinearAxisStrategy {
         match self {
             Self::None => 0.,
             Self::Fixed => target - current,
-            Self::P(kp) => (target - current) * kp.clone(),
+            Self::P(kp) => (target - current) * *kp,
             Self::PID {
                 kp,
                 ki,
@@ -168,9 +168,9 @@ impl LinearAxisStrategy {
                 integral_limit,
             } => {
                 let error = target - current;
-                let p_value = error * kp.clone();
+                let p_value = error * *kp;
                 let d_value = if delta_time != 0. {
-                    (error - last_error.clone()) / delta_time * kd.clone()
+                    (error - *last_error) / delta_time * *kd
                 } else {
                     0.
                 };
@@ -179,7 +179,7 @@ impl LinearAxisStrategy {
                 } else {
                     *integral = integral_limit.fix(*integral + error * delta_time);
                 }
-                let i_value = integral.clone() * ki.clone();
+                let i_value = *integral * *ki;
                 *last_error = error;
                 p_value + i_value + d_value
             }
@@ -220,7 +220,7 @@ pub struct CameraFollow {
 impl Default for CameraFollow {
     fn default() -> Self {
         Self {
-            target: Entity::from_raw(0),
+            target: Entity::from_row(EntityRow::from_raw_u32(0).unwrap()),
             translation_strategy: TranslationStrategy::new(LinearAxisStrategy::Fixed, LinearAxisStrategy::Fixed),
             rotation_strategy: RotationStrategy::None,
             offset: Vec2::ZERO,
@@ -323,7 +323,7 @@ pub fn camera_follow_system(
     transform_query: Query<&Transform>,
     time: Res<Time>,
     mut query: Query<(Entity, &Transform, &mut CameraFollow)>,
-    mut event_writer: EventWriter<ParallaxMoveEvent>,
+    mut event_writer: MessageWriter<ParallaxMoveEvent>,
 ) {
     for (camera, camera_transform, mut follow) in query.iter_mut() {
         if let Ok(target_transform) = transform_query.get(follow.target) {

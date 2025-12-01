@@ -1,11 +1,11 @@
 use crate::layer;
-use bevy::{prelude::*, render::view::RenderLayers};
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 #[cfg(feature = "bevy-inspector-egui")]
 use bevy_inspector_egui::prelude::*;
 
 /// Event to setup and create parallax
-#[derive(Event, Debug)]
+#[derive(Message, Debug)]
 pub struct CreateParallaxEvent {
     pub layers_data: Vec<layer::LayerData>,
     pub camera: Entity,
@@ -67,11 +67,14 @@ impl CreateParallaxEvent {
             entity_commands
                 .insert(Name::new(format!("Parallax Layer ({})", i)))
                 .insert(RenderLayers::from_layers(&[render_layer.into()]))
-                .insert((Transform {
-                    translation: Vec3::new(layer.position.x, layer.position.y, layer.z),
-                    scale: layer.scale.extend(1.0),
-                    ..default()
-                }, Visibility::Visible))
+                .insert((
+                    Transform {
+                        translation: Vec3::new(layer.position.x, layer.position.y, layer.z),
+                        scale: layer.scale.extend(1.0),
+                        ..default()
+                    },
+                    Visibility::Visible,
+                ))
                 .with_children(|parent| {
                     for x in x_range {
                         for y in y_range.clone() {
@@ -111,7 +114,7 @@ impl CreateParallaxEvent {
 }
 
 /// Event used to update parallax
-#[derive(Event, Debug)]
+#[derive(Message, Debug)]
 pub struct ParallaxMoveEvent {
     /// camera translation
     pub translation: Vec2,
@@ -223,10 +226,7 @@ impl ParallaxCameraComponent {
     }
 
     pub fn new(render_layer: u8) -> Self {
-        Self {
-            render_layer,
-            ..default()
-        }
+        Self { render_layer, ..default() }
     }
 }
 
@@ -241,7 +241,7 @@ impl Default for ParallaxCameraComponent {
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
+    use bevy::{ecs::entity::EntityRow, prelude::*};
 
     use crate::ParallaxMoveEvent;
 
@@ -252,83 +252,83 @@ mod tests {
 
     #[test]
     fn test_parallax_event() {
-        let camera = Entity::from_raw(0);
+        let camera = Entity::from_row(EntityRow::from_raw_u32(0).unwrap());
 
         let no_movement = ParallaxMoveEvent {
             translation: Vec2::ZERO,
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(no_movement.has_translation(), false);
-        assert_eq!(no_movement.has_up_translation(), false);
-        assert_eq!(no_movement.has_down_translation(), false);
-        assert_eq!(no_movement.has_left_translation(), false);
-        assert_eq!(no_movement.has_right_translation(), false);
+        assert!(!no_movement.has_translation());
+        assert!(!no_movement.has_up_translation());
+        assert!(!no_movement.has_down_translation());
+        assert!(!no_movement.has_left_translation());
+        assert!(!no_movement.has_right_translation());
 
         let up = ParallaxMoveEvent {
             translation: Vec2::new(0., 1.),
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(up.has_translation(), true);
-        assert_eq!(up.has_up_translation(), true);
-        assert_eq!(up.has_down_translation(), false);
-        assert_eq!(up.has_left_translation(), false);
-        assert_eq!(up.has_right_translation(), false);
+        assert!(up.has_translation());
+        assert!(up.has_up_translation());
+        assert!(!up.has_down_translation());
+        assert!(!up.has_left_translation());
+        assert!(!up.has_right_translation());
 
         let down = ParallaxMoveEvent {
             translation: Vec2::new(0., -1.),
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(down.has_translation(), true);
-        assert_eq!(down.has_up_translation(), false);
-        assert_eq!(down.has_down_translation(), true);
-        assert_eq!(down.has_left_translation(), false);
-        assert_eq!(down.has_right_translation(), false);
+        assert!(down.has_translation());
+        assert!(!down.has_up_translation());
+        assert!(down.has_down_translation());
+        assert!(!down.has_left_translation());
+        assert!(!down.has_right_translation());
 
         let left = ParallaxMoveEvent {
             translation: Vec2::new(-1., 0.),
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(left.has_translation(), true);
-        assert_eq!(left.has_up_translation(), false);
-        assert_eq!(left.has_down_translation(), false);
-        assert_eq!(left.has_left_translation(), true);
-        assert_eq!(left.has_right_translation(), false);
+        assert!(left.has_translation());
+        assert!(!left.has_up_translation());
+        assert!(!left.has_down_translation());
+        assert!(left.has_left_translation());
+        assert!(!left.has_right_translation());
 
         let right = ParallaxMoveEvent {
             translation: Vec2::new(1., 0.),
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(right.has_translation(), true);
-        assert_eq!(right.has_up_translation(), false);
-        assert_eq!(right.has_down_translation(), false);
-        assert_eq!(right.has_left_translation(), false);
-        assert_eq!(right.has_right_translation(), true);
+        assert!(right.has_translation());
+        assert!(!right.has_up_translation());
+        assert!(!right.has_down_translation());
+        assert!(!right.has_left_translation());
+        assert!(right.has_right_translation());
 
         let left_down = ParallaxMoveEvent {
             translation: Vec2::new(-1., -1.),
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(left_down.has_translation(), true);
-        assert_eq!(left_down.has_up_translation(), false);
-        assert_eq!(left_down.has_down_translation(), true);
-        assert_eq!(left_down.has_left_translation(), true);
-        assert_eq!(left_down.has_right_translation(), false);
+        assert!(left_down.has_translation());
+        assert!(!left_down.has_up_translation());
+        assert!(left_down.has_down_translation());
+        assert!(left_down.has_left_translation());
+        assert!(!left_down.has_right_translation());
 
         let up_right = ParallaxMoveEvent {
             translation: Vec2::new(1., 1.),
             rotation: 0.,
-            camera: camera,
+            camera,
         };
-        assert_eq!(up_right.has_translation(), true);
-        assert_eq!(up_right.has_up_translation(), true);
-        assert_eq!(up_right.has_down_translation(), false);
-        assert_eq!(up_right.has_left_translation(), false);
-        assert_eq!(up_right.has_right_translation(), true);
+        assert!(up_right.has_translation());
+        assert!(up_right.has_up_translation());
+        assert!(!up_right.has_down_translation());
+        assert!(!up_right.has_left_translation());
+        assert!(up_right.has_right_translation());
     }
 }

@@ -71,17 +71,11 @@ impl LayerRepeat {
     }
 
     pub fn has_vertical(&self) -> bool {
-        match self {
-            Self::Horizontal(_) => false,
-            _ => true,
-        }
+        matches!(self, Self::Horizontal(_))
     }
 
     pub fn has_horizontal(&self) -> bool {
-        match self {
-            Self::Vertical(_) => false,
-            _ => true,
-        }
+        matches!(self, Self::Vertical(_))
     }
 
     pub fn get_strategy(&self) -> RepeatStrategy {
@@ -106,7 +100,7 @@ impl Animation {
         let total = layer_data.cols * layer_data.rows;
         let duration = match self {
             Self::FPS(fps) => Duration::from_secs_f32(1. / fps),
-            Self::FrameDuration(duration) => duration.clone(),
+            Self::FrameDuration(duration) => *duration,
             Self::TotalDuration(duration) => duration.div_f32(total as f32),
         };
         SpriteFrameUpdate {
@@ -206,7 +200,6 @@ impl Default for LayerData {
 pub struct LayerComponent {
     /// Relative speed of layer to the camera movement
     pub speed: Vec2,
-    ///
     pub repeat: LayerRepeat,
     /// Number of rows (x) and columns (y) with the textures in the layer
     pub texture_count: Vec2,
