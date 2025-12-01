@@ -40,10 +40,10 @@ fn main() {
 
 pub fn initialize_camera_system(
     mut commands: Commands,
-    mut create_parallax: EventWriter<CreateParallaxEvent>
+    mut create_parallax: MessageWriter<CreateParallaxEvent>
 ) {
     let camera = commands
-        .spawn(Camera2d::default())
+        .spawn(Camera2d)
         .insert(ParallaxCameraComponent::default())
         .id();
     let event = CreateParallaxEvent {
@@ -86,7 +86,7 @@ pub fn initialize_camera_system(
 
 pub fn move_camera_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut move_event_writer: EventWriter<ParallaxMoveEvent>,
+    mut move_event_writer: MessageWriter<ParallaxMoveEvent>,
     camera_query: Query<Entity, With<Camera>>,
 ) {
     let camera = camera_query.single().unwrap();

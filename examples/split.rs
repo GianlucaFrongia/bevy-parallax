@@ -1,6 +1,7 @@
 use bevy::{
+    camera::{visibility::RenderLayers, Viewport},
     prelude::*,
-    render::{camera::Viewport, view::RenderLayers},
+    window::WindowResolution,
 };
 use bevy_parallax::{
     CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxPlugin, ParallaxSystems,
@@ -11,7 +12,7 @@ fn main() {
     // Define window
     let primary_window = Window {
         title: "Split Screen".to_string(),
-        resolution: (1280.0, 720.0).into(),
+        resolution: WindowResolution::new(1280, 720),
         resizable: false,
         ..default()
     };
@@ -33,10 +34,10 @@ fn main() {
 }
 
 // Put a ParallaxCameraComponent on the camera used for parallax
-pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
+pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: MessageWriter<CreateParallaxEvent>) {
     let left_camera = commands
         .spawn((
-            Camera2d::default(),
+            Camera2d,
             Camera {
                 order: 0,
                 viewport: Some(Viewport {
@@ -53,7 +54,7 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
         .id();
     let right_camera = commands
         .spawn((
-            Camera2d::default(),
+            Camera2d,
             Camera {
                 order: 1,
                 viewport: Some(Viewport {
@@ -165,7 +166,7 @@ impl InputMap {
 // Send a ParallaxMoveEvent with the desired camera movement speed
 pub fn move_camera_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut move_event_writer: EventWriter<ParallaxMoveEvent>,
+    mut move_event_writer: MessageWriter<ParallaxMoveEvent>,
     camera_query: Query<(Entity, &InputMap), With<Camera>>,
 ) {
     for (camera, input_map) in camera_query.iter() {

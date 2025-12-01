@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResolution};
 #[cfg(feature = "bevy-inspector-egui")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_parallax::{
@@ -25,7 +25,7 @@ fn main() {
     // Define window
     let primary_window = Window {
         title: "Cyberpunk".to_string(),
-        resolution: (1280.0, 720.0).into(),
+        resolution: WindowResolution::new(1280, 720),
         resizable: false,
         ..default()
     };
@@ -79,7 +79,7 @@ pub fn move_player_system(keyboard_input: Res<ButtonInput<KeyCode>>, time: Res<T
 }
 
 // Put a ParallaxCameraComponent on the camera used for parallax
-pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
+pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: MessageWriter<CreateParallaxEvent>) {
     let player = commands
         .spawn((
             Name::new("Player"),
@@ -97,7 +97,7 @@ pub fn initialize_camera_system(mut commands: Commands, mut create_parallax: Eve
     let y_pid = x_pid.with_integral_limit(Limit::new(-25., 25.));
     let offset = Vec2::new(200., 0.);
     let camera = commands
-        .spawn((Camera2d::default(), Transform::from_translation(offset.extend(0.))))
+        .spawn((Camera2d, Transform::from_translation(offset.extend(0.))))
         //.insert(CameraFollow::fixed(player).with_offset(offset))
         //.insert(CameraFollow::proportional(player, 0.1).with_offset(offset))
         .insert(CameraFollow::pid_xyz(player, &x_pid, &y_pid, &x_pid).with_offset(offset))

@@ -29,8 +29,8 @@ impl ParallaxPlugin {
 
 impl Plugin for ParallaxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ParallaxMoveEvent>()
-            .add_event::<CreateParallaxEvent>()
+        app.add_message::<ParallaxMoveEvent>()
+            .add_message::<CreateParallaxEvent>()
             .add_systems(PreUpdate, create_parallax_system)
             .add_systems(Update, sprite_frame_update_system)
             .add_systems(
@@ -53,7 +53,7 @@ fn create_parallax_system(
     primary_window: Single<&Window, With<PrimaryWindow>>,
     parallax_query: Query<(Entity, &ParallaxCameraComponent, &Camera)>,
     layers_query: Query<(Entity, &LayerComponent)>,
-    mut create_parallax_events: EventReader<CreateParallaxEvent>,
+    mut create_parallax_events: MessageReader<CreateParallaxEvent>,
 ) {
     let mut window_size = Vec2::new(primary_window.width(), primary_window.height());
     for event in create_parallax_events.read() {
@@ -83,11 +83,11 @@ fn create_parallax_system(
 fn move_layers_system(
     mut camera_query: Query<(&mut Transform, &ParallaxCameraComponent)>,
     mut layer_query: Query<(&mut Transform, &LayerComponent), Without<ParallaxCameraComponent>>,
-    mut move_events: EventReader<ParallaxMoveEvent>,
+    mut move_events: MessageReader<ParallaxMoveEvent>,
 ) {
     for event in move_events.read() {
         if let Ok((mut camera_transform, parallax)) = camera_query.get_mut(event.camera) {
-            let camera_translation = camera_transform.translation.clone();
+            let camera_translation = camera_transform.translation;
             camera_transform.translation = parallax
                 .inside_limits(camera_transform.translation.truncate() + event.translation)
                 .extend(camera_transform.translation.z);
@@ -110,7 +110,7 @@ fn update_layer_textures_system(
     mut texture_query: Query<(&GlobalTransform, &mut Transform, &LayerTextureComponent, &ViewVisibility), Without<ParallaxCameraComponent>>,
     camera_query: Query<(Entity, &Transform, &Camera), With<ParallaxCameraComponent>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
-    mut move_events: EventReader<ParallaxMoveEvent>,
+    mut move_events: MessageReader<ParallaxMoveEvent>,
 ) {
     for event in move_events.read() {
         if !event.has_translation() {
@@ -137,13 +137,8 @@ fn update_layer_textures_system(
                     let texture_gtransform_computed = texture_gtransform.compute_transform();
 
                     // Correct for stale GlobalTransform
-                    let stale_texture_translation =
-                        camera_transform.translation - texture_gtransform_computed.translation;
-                    let correction = Vec3::new(
-                        event.translation.x * layer.speed.x,
-                        event.translation.y * layer.speed.y,
-                        0.0,
-                    );
+                    let stale_texture_translation = camera_transform.translation - texture_gtransform_computed.translation;
+                    let correction = Vec3::new(event.translation.x * layer.speed.x, event.translation.y * layer.speed.y, 0.0);
                     let texture_translation = stale_texture_translation - correction;
 
                     if layer.repeat.has_horizontal() {
@@ -151,34 +146,29 @@ fn update_layer_textures_system(
                         let half_width = layer_texture.width * texture_gtransform_computed.scale.x / 2.0;
                         // Move not visible right texture to left side of layer
                         if texture_translation.x + half_width < -view_size.x {
-                            let distance_offscreen =
-                                -view_size.x - (texture_translation.x + half_width);
+                            let distance_offscreen = -view_size.x - (texture_translation.x + half_width);
                             let num_of_jumps = (distance_offscreen / x_delta).ceil().max(1.0);
                             texture_transform.translation.x -= x_delta * num_of_jumps;
                         }
                         // Move not visible left texture to right side of layer
                         else if texture_translation.x - half_width > view_size.x {
-                            let distance_offscreen =
-                                texture_translation.x - half_width - view_size.x;
+                            let distance_offscreen = texture_translation.x - half_width - view_size.x;
                             let num_of_jumps = (distance_offscreen / x_delta).ceil().max(1.0);
                             texture_transform.translation.x += x_delta * num_of_jumps;
                         }
                     }
                     if layer.repeat.has_vertical() {
                         let y_delta = layer_texture.height * layer.texture_count.y;
-                        let half_height =
-                            layer_texture.height * texture_gtransform_computed.scale.y / 2.0;
+                        let half_height = layer_texture.height * texture_gtransform_computed.scale.y / 2.0;
                         // Move not visible top texture to the bottom of the layer
                         if texture_translation.y + half_height < -view_size.y {
-                            let distance_offscreen =
-                                -view_size.y - (texture_translation.y + half_height);
+                            let distance_offscreen = -view_size.y - (texture_translation.y + half_height);
                             let num_of_jumps = (distance_offscreen / y_delta).ceil().max(1.0);
                             texture_transform.translation.y -= y_delta * num_of_jumps;
                         }
                         // Move not visible bottom texture to the top of the layer
                         else if texture_translation.y - half_height > view_size.y {
-                            let distance_offscreen =
-                                texture_translation.y - half_height - view_size.y;
+                            let distance_offscreen = texture_translation.y - half_height - view_size.y;
                             let num_of_jumps = (distance_offscreen / y_delta).ceil().max(1.0);
                             texture_transform.translation.y += y_delta * num_of_jumps;
                         }
